@@ -20,6 +20,12 @@ The administrator uses `frontend/index.html`. Share `frontend/vote.html` with st
 it only allows a registered wallet to vote and contains no administrator controls. On GitHub
 Pages, replace `frontend/vote.html` with your published site URL followed by `/vote.html`.
 
+## Netlify deployment
+
+`netlify.toml` publishes the `frontend` folder. After pushing it to the connected GitHub
+repository, Netlify serves the administrator page at the site root and the voter portal at
+`/vote.html`.
+
 The deploying account is the administrator and can add candidates and register voter
 addresses. Registered wallets can vote once. Candidate names and vote totals are read from
 the contract. Use the deployment network's native token for transaction fees.
