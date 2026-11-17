@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Voting dApp</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+<header>
+<h1>Student Voting dApp Administrator</h1>
+<p>Manage candidates and register voter wallet addresses.</p>
+<p><a href="vote.html">Open the voter portal</a></p>
+<button id="connectWalletButton">
+Connect Wallet
+</button>
+<label for="contractAddress">Deployed Voting contract address</label>
+<input id="contractAddress" type="text" value="0x92Ae3C775d794a819bFf8Cfcf1FA76ea5131F63d" placeholder="0x…" autocomplete="off">
+<p id="walletStatus">
+Wallet not connected
+</p>
+<p id="networkStatus">Network not checked</p>
+</header>
+<main>
+<section>
+<h2>Available Candidates</h2>
+<div id="candidateList">
+<!-- Candidates will be displayed here -->
+</div>
+</section>
+<section id="registrationSection">
+<h2>Voter registration</h2>
+<p>Only the administrator can register voter wallet addresses.</p>
+</section>
+<section id="adminPanel" hidden>
+<h2>Administrator</h2>
+<form id="candidateForm">
+<label>Candidate name <input name="name" required maxlength="80"></label>
+<button type="submit">Add candidate</button>
+</form>
+<form id="registerForm">
+<label>Voter wallet address <input name="address" required placeholder="0x…"></label>
+<button type="submit">Register voter</button>
+</form>
+</section>
+<section class="results-section">
+<h2>Voting Results</h2>
+<div id="results">
+<!-- Voting results will be displayed here -->
+</div>
+</section>
+</main>
+<p id="message"></p>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.5/dist/ethers.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
