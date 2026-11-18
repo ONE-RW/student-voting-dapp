@@ -124,6 +124,7 @@ contract Voting {
         );
 
         require(_voter != address(0), "Invalid voter address");
+        require(_voter != administrator, "Administrator cannot be registered as voter");
         require(!voters[_voter].isRegistered, "Voter is already registered");
 
         voters[_voter].isRegistered = true;
@@ -133,6 +134,11 @@ contract Voting {
 
     // Allows a registered voter to vote only once
     function vote(uint _candidateId) public {
+        require(
+            msg.sender != administrator,
+            "Administrator cannot vote"
+        );
+
         require(
             voters[msg.sender].isRegistered,
             "You are not registered to vote"

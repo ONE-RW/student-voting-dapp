@@ -1,4 +1,4 @@
-const CONTRACT_ADDRESS = "0x92Ae3C775d794a819bFf8Cfcf1FA76ea5131F63d";
+const FALLBACK_CONTRACT_ADDRESS = "0x92Ae3C775d794a819bFf8Cfcf1FA76ea5131F63d";
 const EXPECTED_CHAIN_ID = 11155111n;
 const SEPOLIA_CHAIN_ID_HEX = "0xaa36a7";
 const ABI_PATH = "./Voting.json";
@@ -29,6 +29,8 @@ const refreshVoterHistoryButton = document.getElementById("refreshVoterHistoryBu
 let provider;
 let contract;
 let account;
+let activeContractAddress = FALLBACK_CONTRACT_ADDRESS;
+let isAdministrator = false;
 
 function showMessage(text, error = false) {
   message.textContent = text;
@@ -55,11 +57,10 @@ function shortAddress(address) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
-async function loadAbi() {
+async function loadContractArtifact() {
   const response = await fetch(ABI_PATH);
   if (!response.ok) throw new Error("Could not load the voting contract ABI.");
-  const artifact = await response.json();
-  return Array.isArray(artifact) ? artifact : artifact.abi;
+  return response.json();
 }
 
 async function switchToSepolia() {
@@ -91,10 +92,15 @@ async function connectWallet() {
     showActivity("Loading your voting profile", "Checking the contract and your voter registration.", "busy");
     const network = await provider.getNetwork();
     if (network.chainId !== EXPECTED_CHAIN_ID) throw new Error("Sepolia is required. Switch MetaMask to Sepolia, then connect again.");
-    const code = await provider.getCode(CONTRACT_ADDRESS);
+    const artifact = await loadContractArtifact();
+    activeContractAddress = artifact.address || FALLBACK_CONTRACT_ADDRESS;
+    if (!ethers.isAddress(activeContractAddress)) throw new Error("The configured voting contract address is invalid.");
+    const code = await provider.getCode(activeContractAddress);
     if (code === "0x") throw new Error("The voting contract was not found on Sepolia.");
 
-    contract = new ethers.Contract(CONTRACT_ADDRESS, await loadAbi(), signer);
+    contract = new ethers.Contract(activeContractAddress, Array.isArray(artifact) ? artifact : artifact.abi, signer);
+    const administrator = await contract.administrator();
+    isAdministrator = administrator.toLowerCase() === account.toLowerCase();
     walletStatus.textContent = shortAddress(account);
     networkStatus.textContent = "Network: Sepolia test network";
     connectionLabel.textContent = "Connected";
@@ -134,10 +140,10 @@ async function refresh() {
     candidateList.replaceChildren();
     results.replaceChildren();
     statusAddress.textContent = `${shortAddress(account)} (you)`;
-    voterStatus.textContent = voter[1] ? "You have already voted." : voter[0] ? "You are registered and can vote." : "Your wallet is not registered.";
-    registrationBadge.textContent = voter[1] ? "Vote submitted" : voter[0] ? "Registered" : "Not registered";
+    voterStatus.textContent = isAdministrator ? "Administrator wallets cannot vote." : voter[1] ? "You have already voted." : voter[0] ? "You are registered and can vote." : "Your wallet is not registered.";
+    registrationBadge.textContent = isAdministrator ? "Administrator" : voter[1] ? "Vote submitted" : voter[0] ? "Registered" : "Not registered";
     registrationBadge.classList.toggle("success", voter[0]);
-    statusHint.textContent = voter[1] ? "Your vote has been recorded on the Sepolia network." : voter[0] ? "You can cast one vote for a candidate." : "Ask the administrator to register this wallet address.";
+    statusHint.textContent = isAdministrator ? "The deploying wallet manages the election and cannot cast a vote." : voter[1] ? "Your vote has been recorded on the Sepolia network." : voter[0] ? "You can cast one vote for a candidate." : "Ask the administrator to register this wallet address.";
     setStepState("stepConnect", "complete", "Connected");
     setStepState("stepRegister", voter[0] ? "complete" : "active", voter[0] ? "Wallet registered" : "Send your address to the administrator");
     setStepState("stepVote", voter[0] && !voter[1] ? "active" : voter[1] ? "complete" : "", voter[1] ? "Vote recorded" : "One vote per voter");
@@ -146,8 +152,8 @@ async function refresh() {
       candidateList.innerHTML = '<div class="empty-state">No candidates have been added yet.</div>';
       results.innerHTML = '<div class="empty-state">No results yet.</div>';
       totalVotes.textContent = "Total votes: 0";
-      showActivity(voter[0] ? "You are registered" : "Registration needed", voter[0] ? "The ballot will appear when candidates are added." : "Send your wallet address to the administrator to be registered.", voter[0] ? "success" : "info");
-      showMessage(voter[0] ? "You are registered. The ballot is not available yet." : "Your wallet is not registered to vote.", !voter[0]);
+      showActivity(isAdministrator ? "Administrator account" : voter[0] ? "You are registered" : "Registration needed", isAdministrator ? "The administrator manages the election and cannot cast a vote." : voter[0] ? "The ballot will appear when candidates are added." : "Send your wallet address to the administrator to be registered.", isAdministrator || voter[0] ? "success" : "info");
+      showMessage(isAdministrator ? "The administrator wallet cannot vote." : voter[0] ? "You are registered. The ballot is not available yet." : "Your wallet is not registered to vote.", !isAdministrator && !voter[0]);
       return;
     }
 
@@ -174,8 +180,8 @@ async function refresh() {
       const voteButton = document.createElement("button");
       voteButton.type = "button";
       voteButton.className = "vote-button";
-      voteButton.textContent = voter[1] ? "Voted" : voter[0] ? "Vote" : "Not registered";
-      voteButton.disabled = !voter[0] || voter[1];
+      voteButton.textContent = isAdministrator ? "Admin cannot vote" : voter[1] ? "Voted" : voter[0] ? "Vote" : "Not registered";
+      voteButton.disabled = isAdministrator || !voter[0] || voter[1];
       voteButton.addEventListener("click", () => submitVote(id, names[index]));
       card.append(info, voteButton);
       candidateList.append(card);
@@ -209,6 +215,7 @@ async function refresh() {
 
 async function submitVote(candidateId, candidateName) {
   try {
+    if (isAdministrator) throw new Error("The administrator wallet is not allowed to vote.");
     showActivity("Vote awaiting your approval", `Review and confirm your vote for ${candidateName} in MetaMask.`, "busy");
     showMessage("Confirm the vote in MetaMask...");
     transactionStatus.textContent = `Waiting for your vote for ${candidateName} to be confirmed...`;
@@ -302,7 +309,7 @@ async function loadVoterHistory() {
 }
 
 async function loadIndexedVoterEvents() {
-  const baseUrl = `https://eth-sepolia.blockscout.com/api/v2/addresses/${CONTRACT_ADDRESS}/logs`;
+  const baseUrl = `https://eth-sepolia.blockscout.com/api/v2/addresses/${activeContractAddress}/logs`;
   const events = [];
   let nextUrl = baseUrl;
   while (nextUrl) {

@@ -21,6 +21,7 @@ let signer;
 let contract;
 let account;
 let isAdmin = false;
+let administratorAddress;
 
 function showMessage(text, error = false) {
   message.textContent = text;
@@ -37,8 +38,7 @@ async function loadAbi() {
       const response = await fetch(path);
       if (!response.ok) continue;
       const artifact = await response.json();
-      if (Array.isArray(artifact)) return artifact;
-      if (Array.isArray(artifact.abi)) return artifact.abi;
+      if (Array.isArray(artifact) || Array.isArray(artifact.abi)) return artifact;
     } catch (_) {
       // Try the other supported server location.
     }
@@ -74,14 +74,18 @@ async function connectWallet() {
     if (network.chainId !== EXPECTED_CHAIN_ID) {
       throw new Error("Sepolia is required for this voting contract. Switch MetaMask to Sepolia, then connect again.");
     }
-    const address = contractAddressInput.value.trim();
+    const artifact = await loadAbi();
+    const address = !Array.isArray(artifact) && artifact.address && ethers.isAddress(artifact.address)
+      ? artifact.address
+      : contractAddressInput.value.trim();
     if (!ethers.isAddress(address)) throw new Error("The Voting contract address is not valid.");
+    contractAddressInput.value = address;
     const code = await provider.getCode(address);
     if (code === "0x") throw new Error(`No contract was found at this address on the current network (chain ID ${network.chainId}). Switch MetaMask to the network where you deployed it, then connect again.`);
 
-    contract = new ethers.Contract(address, await loadAbi(), signer);
-    const administrator = await contract.administrator();
-    isAdmin = administrator.toLowerCase() === account.toLowerCase();
+    contract = new ethers.Contract(address, Array.isArray(artifact) ? artifact : artifact.abi, signer);
+    administratorAddress = await contract.administrator();
+    isAdmin = administratorAddress.toLowerCase() === account.toLowerCase();
     walletStatus.textContent += isAdmin ? " (administrator)" : "";
     adminPanel.hidden = !isAdmin;
     transactionHistoryPanel.hidden = !isAdmin;
@@ -327,6 +331,7 @@ registerForm.addEventListener("submit", async (event) => {
   if (!contract || !isAdmin) return showMessage("Only the administrator can register voters.", true);
   const address = new FormData(registerForm).get("address").trim();
   if (!ethers.isAddress(address)) return showMessage("Enter a valid voter wallet address.", true);
+  if (address.toLowerCase() === administratorAddress.toLowerCase()) return showMessage("The administrator wallet cannot be registered to vote.", true);
   await submitTransaction(() => contract.registerVoter(address), `Registered voter ${address}.`);
   registerForm.reset();
 });
