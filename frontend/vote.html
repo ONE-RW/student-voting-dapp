@@ -33,6 +33,7 @@
   <div id="stepVote" class="step"><span class="step-number">3</span><div><strong>Cast your vote</strong><small>One vote per voter</small></div></div>
 </section>
 <main class="dashboard voter-dashboard">
+  <div id="activityAlert" class="activity-alert" role="status" aria-live="polite" aria-atomic="true" hidden><span id="activityIcon" class="activity-icon" aria-hidden="true">i</span><div><strong id="activityTitle">Ready to connect</strong><p id="activityDetail">Connect your wallet to check registration and load the ballot.</p></div><span id="activitySpinner" class="activity-spinner" aria-hidden="true" hidden></span></div>
   <section class="panel candidates-panel">
     <div class="panel-heading"><div class="panel-title"><span class="heading-icon" aria-hidden="true">&#9745;</span><h2>Available candidates</h2></div><div class="heading-actions"><span class="live-badge"><span class="status-dot"></span>Live</span><button id="refreshButton" class="quiet-button" type="button">&#8635; <span>Refresh</span></button></div></div>
     <div id="candidateList" class="candidate-grid"><div class="empty-state">Connect your wallet to load the ballot.</div></div>

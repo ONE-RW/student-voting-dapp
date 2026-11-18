@@ -1,4 +1,4 @@
-﻿const CONTRACT_ADDRESS = "0x92Ae3C775d794a819bFf8Cfcf1FA76ea5131F63d";
+const CONTRACT_ADDRESS = "0x92Ae3C775d794a819bFf8Cfcf1FA76ea5131F63d";
 const EXPECTED_CHAIN_ID = 11155111n;
 const SEPOLIA_CHAIN_ID_HEX = "0xaa36a7";
 const ABI_PATH = "./Voting.json";
@@ -18,6 +18,11 @@ const registrationBadge = document.getElementById("registrationBadge");
 const statusAddress = document.getElementById("statusAddress");
 const statusHint = document.getElementById("statusHint");
 const totalVotes = document.getElementById("totalVotes");
+const activityAlert = document.getElementById("activityAlert");
+const activityTitle = document.getElementById("activityTitle");
+const activityDetail = document.getElementById("activityDetail");
+const activityIcon = document.getElementById("activityIcon");
+const activitySpinner = document.getElementById("activitySpinner");
 
 let provider;
 let contract;
@@ -26,6 +31,18 @@ let account;
 function showMessage(text, error = false) {
   message.textContent = text;
   message.classList.toggle("error", error);
+}
+
+function showActivity(title, detail, state = "info") {
+  activityAlert.hidden = false;
+  activityAlert.classList.remove("is-busy", "is-error", "is-success");
+  if (state === "busy") activityAlert.classList.add("is-busy");
+  if (state === "error") activityAlert.classList.add("is-error");
+  if (state === "success") activityAlert.classList.add("is-success");
+  activityTitle.textContent = title;
+  activityDetail.textContent = detail;
+  activityIcon.textContent = state === "error" ? "!" : state === "success" ? "✓" : "i";
+  activitySpinner.hidden = state !== "busy";
 }
 
 function errorText(error) {
@@ -58,13 +75,18 @@ function setStepState(id, state, detail) {
 
 async function connectWallet() {
   try {
-    if (!window.ethereum) throw new Error("MetaMask was not detected. Install or enable it, then reload.");
+    if (!window.ethereum) throw new Error("MetaMask was not detected. Install or enable the extension, then reload.");
     if (typeof ethers === "undefined") throw new Error("Ethers.js did not load. Check your internet connection and reload.");
+    connectWalletButton.disabled = true;
+    showActivity("Wallet connection requested", "Approve the connection request in MetaMask to continue.", "busy");
+    showMessage("Waiting for MetaMask wallet approval...");
     await window.ethereum.request({ method: "eth_requestAccounts" });
+    showActivity("Checking network", "Switching to the Sepolia test network if needed.", "busy");
     await switchToSepolia();
     provider = new ethers.BrowserProvider(window.ethereum);
     const signer = await provider.getSigner();
     account = await signer.getAddress();
+    showActivity("Loading your voting profile", "Checking the contract and your voter registration.", "busy");
     const network = await provider.getNetwork();
     if (network.chainId !== EXPECTED_CHAIN_ID) throw new Error("Sepolia is required. Switch MetaMask to Sepolia, then connect again.");
     const code = await provider.getCode(CONTRACT_ADDRESS);
@@ -86,11 +108,15 @@ async function connectWallet() {
       }
     };
     await refresh();
+    showActivity("Wallet connected", "Your wallet and Sepolia network are ready.", "success");
     showMessage("Wallet and voting contract connected.");
   } catch (error) {
     console.error(error);
+    showActivity("Could not connect wallet", errorText(error), "error");
     showMessage(errorText(error), true);
     transactionStatus.textContent = errorText(error);
+  } finally {
+    connectWalletButton.disabled = false;
   }
 }
 
@@ -100,6 +126,7 @@ async function refresh() {
     return;
   }
   try {
+    showActivity("Checking voter status", "Reading the latest ballot and vote totals from Sepolia.", "busy");
     const [[ids, names, voteCounts], voter] = await Promise.all([contract.getCandidates(), contract.voters(account)]);
     candidateList.replaceChildren();
     results.replaceChildren();
@@ -116,6 +143,7 @@ async function refresh() {
       candidateList.innerHTML = '<div class="empty-state">No candidates have been added yet.</div>';
       results.innerHTML = '<div class="empty-state">No results yet.</div>';
       totalVotes.textContent = "Total votes: 0";
+      showActivity(voter[0] ? "You are registered" : "Registration needed", voter[0] ? "The ballot will appear when candidates are added." : "Send your wallet address to the administrator to be registered.", voter[0] ? "success" : "info");
       showMessage(voter[0] ? "You are registered. The ballot is not available yet." : "Your wallet is not registered to vote.", !voter[0]);
       return;
     }
@@ -137,7 +165,7 @@ async function refresh() {
       const title = document.createElement("h3");
       title.textContent = names[index];
       const detail = document.createElement("p");
-      detail.textContent = `Candidate #${id} · ${count} vote(s)`;
+      detail.textContent = `Candidate #${id} | ${count} vote(s)`;
       text.append(title, detail);
       info.append(avatar, text);
       const voteButton = document.createElement("button");
@@ -157,7 +185,7 @@ async function refresh() {
       resultName.textContent = names[index];
       const resultCount = document.createElement("span");
       resultCount.className = "result-count";
-      resultCount.textContent = `${count} vote(s) · ${percentage}%`;
+      resultCount.textContent = `${count} vote(s) | ${percentage}%`;
       line.append(resultName, resultCount);
       const track = document.createElement("div");
       track.className = "result-track";
@@ -168,25 +196,31 @@ async function refresh() {
       result.append(line, track);
       results.append(result);
     });
+    showActivity(voter[1] ? "Vote already recorded" : voter[0] ? "You are ready to vote" : "Registration needed", voter[1] ? "Your vote is on the Sepolia network. Thank you for participating." : voter[0] ? "Choose a candidate, then confirm the transaction in MetaMask." : "Send your wallet address to the administrator to be registered.", voter[1] || voter[0] ? "success" : "info");
     showMessage(voter[1] ? "Your vote has already been recorded." : voter[0] ? "You are registered and ready to vote." : "This wallet is not registered. Ask the administrator to register it.", !voter[0]);
   } catch (error) {
+    showActivity("Could not load voting data", errorText(error), "error");
     showMessage(`Could not read voting data: ${errorText(error)}`, true);
   }
 }
 
 async function submitVote(candidateId, candidateName) {
   try {
+    showActivity("Vote awaiting your approval", `Review and confirm your vote for ${candidateName} in MetaMask.`, "busy");
     showMessage("Confirm the vote in MetaMask...");
     transactionStatus.textContent = `Waiting for your vote for ${candidateName} to be confirmed...`;
     const transaction = await contract.vote(candidateId);
+    showActivity("Transaction submitted", "Your vote is being confirmed on Sepolia. Please keep this page open.", "busy");
     transactionStatus.textContent = `Vote transaction submitted: ${shortAddress(transaction.hash)}`;
     showMessage("Vote submitted. Waiting for confirmation...");
     await transaction.wait();
     transactionStatus.textContent = `Your vote for ${candidateName} was confirmed on Sepolia.`;
     await refresh();
+    showActivity("Vote confirmed", `Your vote for ${candidateName} has been recorded successfully.`, "success");
     showMessage(`Your vote for ${candidateName} has been recorded.`);
   } catch (error) {
     console.error(error);
+    showActivity("Vote not completed", errorText(error), "error");
     transactionStatus.textContent = errorText(error);
     showMessage(errorText(error), true);
   }

@@ -106,6 +106,7 @@ async function refresh() {
       return;
     }
 
+    const votersByCandidate = await loadCandidateVoters(ids);
     ids.forEach((id, index) => {
       const card = document.createElement("article");
       card.className = "candidate";
@@ -113,13 +114,32 @@ async function refresh() {
       title.textContent = names[index];
       const details = document.createElement("p");
       details.textContent = `Candidate ID: ${id}`;
-      const voteButton = document.createElement("button");
-      voteButton.textContent = voter[1] ? "Already voted" : voter[0] ? "Vote" : "Not registered";
-      voteButton.disabled = !voter[0] || voter[1];
-      voteButton.addEventListener("click", () => submitTransaction(
-        () => contract.vote(id), `Your vote for ${names[index]} has been recorded.`
-      ));
-      card.append(title, details, voteButton);
+      const voterList = document.createElement("div");
+      voterList.className = "candidate-voter-list";
+      const candidateVoters = votersByCandidate.get(id.toString()) || [];
+      const voterHeading = document.createElement("strong");
+      voterHeading.textContent = `Voters (${candidateVoters.length})`;
+      voterList.append(voterHeading);
+      if (votersByCandidate.scanError) {
+        const unavailable = document.createElement("p");
+        unavailable.textContent = "Voter history is unavailable from the RPC provider.";
+        voterList.append(unavailable);
+      } else if (candidateVoters.length) {
+        const list = document.createElement("ul");
+        candidateVoters.forEach((address) => {
+          const item = document.createElement("li");
+          const addressText = document.createElement("code");
+          addressText.textContent = address;
+          item.append(addressText);
+          list.append(item);
+        });
+        voterList.append(list);
+      } else {
+        const empty = document.createElement("p");
+        empty.textContent = "No votes yet.";
+        voterList.append(empty);
+      }
+      card.append(title, details, voterList);
       candidateList.appendChild(card);
 
       const result = document.createElement("div");
@@ -130,6 +150,22 @@ async function refresh() {
   } catch (error) {
     showMessage(`Could not read voting data: ${errorText(error)}`, true);
   }
+}
+
+async function loadCandidateVoters(candidateIds) {
+  const voterMap = new Map(candidateIds.map((id) => [id.toString(), []]));
+  try {
+    const events = await contract.queryFilter(contract.filters.VoteCast(), 0, "latest");
+    for (const event of events) {
+      const [voterAddress, candidateId] = event.args;
+      const list = voterMap.get(candidateId.toString());
+      if (list) list.push(voterAddress);
+    }
+  } catch (error) {
+    console.warn("Could not load vote history:", error);
+    voterMap.scanError = true;
+  }
+  return voterMap;
 }
 
 async function submitTransaction(send, successText) {

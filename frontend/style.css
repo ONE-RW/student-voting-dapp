@@ -124,6 +124,19 @@ code { color: #214b3f; font-family: ui-monospace, SFMono-Regular, Consolas, mono
 .voter-page .result-fill { background: linear-gradient(90deg, #168462, #80a74a); }
 .voter-page .transaction-message { border: 1px solid #e4eadb; background: #f3f6eb; }
 .voter-page .app-footer { color: #718276; }
+.activity-alert { display: flex; grid-column: 1 / -1; align-items: center; gap: 11px; padding: 11px 13px; border: 1px solid #c9dfcf; border-radius: 10px; color: #254e3d; background: #edf6eb; box-shadow: 0 3px 10px rgba(34,69,47,.04); }
+.activity-alert[hidden] { display: none; }
+.activity-alert.is-busy { border-color: #b8d8c5; background: #e8f4e9; }
+.activity-alert.is-error { border-color: #e8c7c5; color: #813d3c; background: #fff2ef; }
+.activity-alert.is-success { border-color: #b8dcc4; background: #e8f5e9; }
+.activity-icon { display: grid; width: 27px; height: 27px; flex: 0 0 auto; place-items: center; border-radius: 50%; color: #fff; background: #43845f; font-size: .78rem; font-weight: 700; }
+.activity-alert.is-error .activity-icon { background: #b75450; }
+.activity-alert.is-success .activity-icon { background: #248252; }
+.activity-alert strong { display: block; font-size: .73rem; }
+.activity-alert p { margin: 2px 0 0; color: inherit; font-size: .68rem; line-height: 1.4; opacity: .82; }
+.activity-spinner { width: 17px; height: 17px; flex: 0 0 auto; margin-left: auto; border: 2px solid rgba(30,112,75,.2); border-top-color: #247e55; border-radius: 50%; animation: activity-spin .75s linear infinite; }
+.activity-spinner[hidden] { display: none; }
+@keyframes activity-spin { to { transform: rotate(360deg); } }
 body:not(.voter-page) { color: #17253b; background: radial-gradient(circle at 8% 0%, #e4f7f6 0, transparent 31rem), linear-gradient(135deg, #f8faff 0%, #eef1fb 100%); }
 body:not(.voter-page) .container { width: min(1100px, calc(100% - 40px)); min-height: calc(100vh - 48px); margin: 24px auto; overflow: hidden; border: 1px solid rgba(220,227,237,.92); border-radius: 20px; background: rgba(255,255,255,.94); box-shadow: 0 20px 60px rgba(31,42,70,.12); }
 body:not(.voter-page) .hero { padding: 28px 42px 36px; color: #fff; background: linear-gradient(120deg, #202e62 0%, #4532a2 55%, #0f958b 130%); }
@@ -166,6 +179,12 @@ body:not(.voter-page) .candidate + .candidate { margin-top: 10px; }
 body:not(.voter-page) .candidate h3 { margin: 0 0 5px; font-size: 1rem; }
 body:not(.voter-page) .candidate p { margin: 0; color: #657188; font-size: .84rem; }
 body:not(.voter-page) .candidate button { flex-shrink: 0; }
+body:not(.voter-page) .candidate-voter-list { margin-top: 12px; padding-top: 10px; border-top: 1px solid #e4e8ef; }
+body:not(.voter-page) .candidate-voter-list > strong { color: #4b5b70; font-size: .75rem; }
+body:not(.voter-page) .candidate-voter-list ul { display: grid; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; }
+body:not(.voter-page) .candidate-voter-list li { padding: 7px 9px; border: 1px solid #e9edf3; border-radius: 7px; background: #fbfcfe; }
+body:not(.voter-page) .candidate-voter-list code { overflow-wrap: anywhere; color: #4e5d74; font-size: .7rem; }
+body:not(.voter-page) .candidate-voter-list p { margin-top: 6px; color: #7a8799; font-size: .75rem; }
 body:not(.voter-page) .result-item { padding: 12px 0; color: #31405a; font-weight: 600; }
 body:not(.voter-page) #candidateList:empty::before, body:not(.voter-page) #results:empty::before { content: "Connect your wallet to load election data."; display: block; padding: 18px; color: var(--muted); border: 1px dashed var(--line); border-radius: 9px; text-align: center; }
 body:not(.voter-page) #message { min-height: 24px; margin: 6px 42px 20px; color: #087d73; font-weight: 700; text-align: center; }
