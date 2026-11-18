@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -13,12 +13,12 @@
 <body class="voter-page">
 <div class="container">
 <header class="app-header">
-  <div class="app-brand"><span class="brand-mark" aria-hidden="true">✓</span><div><h1>Student Voting dApp</h1><p>Vote for your preferred candidate.</p></div></div>
-  <a class="admin-link" href="index.html">Administrator portal <span aria-hidden="true">↗</span></a>
+  <div class="app-brand"><span class="brand-mark" aria-hidden="true">&#10003;</span><div><h1>Student Voting dApp</h1><p>Vote for your preferred candidate.</p></div></div>
+  <a class="admin-link" href="index.html">Administrator portal <span aria-hidden="true">&#8599;</span></a>
 </header>
 <section class="top-grid" aria-label="Wallet and contract information">
   <article class="info-card contract-card">
-    <div class="card-title"><span class="mini-icon" aria-hidden="true">⌘</span><div><h2>Smart contract</h2><p>Connected to the voting smart contract.</p></div><span class="contract-icon" aria-hidden="true">▤</span></div>
+    <div class="card-title"><span class="mini-icon" aria-hidden="true">&#8984;</span><div><h2>Smart contract</h2><p>Connected to the voting smart contract.</p></div><span class="contract-icon" aria-hidden="true">&#9635;</span></div>
     <div class="contract-meta"><span>Contract</span><code id="contractAddress">0x92Ae3C775d794a819bFf8Cfcf1FA76ea5131F63d</code><span>Network</span><span>Sepolia test network</span></div>
   </article>
   <article class="info-card wallet-card">
@@ -27,20 +27,20 @@
   </article>
 </section>
 <section class="steps" aria-label="Voting steps">
-  <div id="stepConnect" class="step complete"><span class="step-number">✓</span><div><strong>Connect your wallet</strong><small id="stepConnectDetail">Connect MetaMask</small></div></div>
+  <div id="stepConnect" class="step complete"><span class="step-number">&#10003;</span><div><strong>Connect your wallet</strong><small id="stepConnectDetail">Connect MetaMask</small></div></div>
   <div id="stepRegister" class="step"><span class="step-number">2</span><div><strong>Get registered</strong><small>Ask the administrator to register your address</small></div></div>
   <div id="stepVote" class="step"><span class="step-number">3</span><div><strong>Cast your vote</strong><small>One vote per voter</small></div></div>
 </section>
 <main class="dashboard voter-dashboard">
   <section class="panel candidates-panel">
-    <div class="panel-heading"><div class="panel-title"><span class="heading-icon" aria-hidden="true">☑</span><h2>Available candidates</h2></div><div class="heading-actions"><span class="live-badge"><span class="status-dot"></span>Live</span><button id="refreshButton" class="quiet-button" type="button">↻ <span>Refresh</span></button></div></div>
+    <div class="panel-heading"><div class="panel-title"><span class="heading-icon" aria-hidden="true">&#9745;</span><h2>Available candidates</h2></div><div class="heading-actions"><span class="live-badge"><span class="status-dot"></span>Live</span><button id="refreshButton" class="quiet-button" type="button">&#8635; <span>Refresh</span></button></div></div>
     <div id="candidateList" class="candidate-grid"><div class="empty-state">Connect your wallet to load the ballot.</div></div>
   </section>
   <aside class="side-column">
-    <section class="panel voter-status-panel"><div class="panel-heading"><div class="panel-title"><span class="heading-icon" aria-hidden="true">♙</span><h2>Your voter status</h2></div></div><div class="status-row"><code id="statusAddress">Wallet not connected</code><span id="registrationBadge" class="status-badge pending">Not connected</span></div><p id="statusHint" class="status-hint">Connect your wallet to check your registration.</p></section>
-    <section class="panel transaction-panel"><div class="panel-heading"><div class="panel-title"><span class="heading-icon" aria-hidden="true">▣</span><h2>Transaction status</h2></div></div><p id="transactionStatus" class="transaction-message">No voting transaction has been submitted.</p></section>
+    <section class="panel voter-status-panel"><div class="panel-heading"><div class="panel-title"><span class="heading-icon" aria-hidden="true">&#9813;</span><h2>Your voter status</h2></div></div><div class="status-row"><code id="statusAddress">Wallet not connected</code><span id="registrationBadge" class="status-badge pending">Not connected</span></div><p id="statusHint" class="status-hint">Connect your wallet to check your registration.</p></section>
+    <section class="panel transaction-panel"><div class="panel-heading"><div class="panel-title"><span class="heading-icon" aria-hidden="true">&#9634;</span><h2>Transaction status</h2></div></div><p id="transactionStatus" class="transaction-message">No voting transaction has been submitted.</p></section>
   </aside>
-  <section class="panel results-section"><div class="panel-heading"><div class="panel-title"><span class="heading-icon" aria-hidden="true">▤</span><h2>Voting results</h2></div><span id="totalVotes" class="total-votes">Total votes: 0</span></div><div id="results" class="results-list"><div class="empty-state">Results will appear when the ballot is loaded.</div></div></section>
+  <section class="panel results-section"><div class="panel-heading"><div class="panel-title"><span class="heading-icon" aria-hidden="true">&#9635;</span><h2>Voting results</h2></div><span id="totalVotes" class="total-votes">Total votes: 0</span></div><div id="results" class="results-list"><div class="empty-state">Results will appear when the ballot is loaded.</div></div></section>
 </main>
 <p id="message" role="status" aria-live="polite"></p>
 <footer class="app-footer">Votes are recorded on the Sepolia test network. Each registered voter can vote once.</footer>
