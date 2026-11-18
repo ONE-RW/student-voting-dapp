@@ -28,7 +28,14 @@ repository, Netlify serves the administrator page at the site root and the voter
 
 The deploying account is the administrator and can add candidates and register voter
 addresses. Registered wallets can vote once. Candidate names and vote totals are read from
-the contract. Use the deployment network's native token for transaction fees.
+the contract. The administrator page also reads voter and transaction history from the
+contract's on-chain events. Use the deployment network's native token for transaction fees.
+
+Netlify publishes the `frontend` directory, including its HTML, CSS, JavaScript, and ABI files.
+Connect the Netlify site to this repository's `main` branch and enable automatic deploys so
+each pushed commit appears on the live site after its deploy succeeds. The voter page is at
+`/vote.html`; the administrator page is the site root. If a deploy succeeds but the browser
+still shows an older version, clear the site's deploy cache and hard-refresh the page.
 
 If the page says no contract was found at the address, verify the address and switch
 MetaMask to the deployment network. If `Voting.json` cannot be loaded, check that the ABI file exists

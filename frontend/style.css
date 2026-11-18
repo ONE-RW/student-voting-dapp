@@ -164,6 +164,7 @@ body:not(.voter-page) .dashboard { display: grid; grid-template-columns: minmax(
 body:not(.voter-page) .candidates-panel { grid-area: candidates; }
 body:not(.voter-page) .admin-panel { grid-area: admin; align-self: start; }
 body:not(.voter-page) .results-section { grid-area: results; }
+body:not(.voter-page) .transaction-history-panel { grid-column: 1 / -1; }
 body:not(.voter-page) .panel { padding: 20px; border: 1px solid #dce3ed; border-radius: 13px; background: #fff; }
 body:not(.voter-page) .section-heading { align-items: flex-start; margin-bottom: 17px; }
 body:not(.voter-page) .section-heading h2 { margin: 0; font-size: 1.25rem; }
@@ -185,6 +186,20 @@ body:not(.voter-page) .candidate-voter-list ul { display: grid; gap: 6px; margin
 body:not(.voter-page) .candidate-voter-list li { padding: 7px 9px; border: 1px solid #e9edf3; border-radius: 7px; background: #fbfcfe; }
 body:not(.voter-page) .candidate-voter-list code { overflow-wrap: anywhere; color: #4e5d74; font-size: .7rem; }
 body:not(.voter-page) .candidate-voter-list p { margin-top: 6px; color: #7a8799; font-size: .75rem; }
+body:not(.voter-page) .history-refresh { padding: 7px 10px; border: 1px solid #d9deea; border-radius: 8px; color: #34425a; background: #fff; box-shadow: none; font-size: .72rem; }
+body:not(.voter-page) .history-refresh:hover { border-color: #5d3fd3; color: #482cac; background: #faf9ff; }
+body:not(.voter-page) .transaction-history { display: grid; gap: 8px; }
+body:not(.voter-page) .history-empty { margin: 0; padding: 14px; border: 1px dashed #dce3ed; border-radius: 9px; color: #657188; font-size: .8rem; text-align: center; }
+body:not(.voter-page) .history-error { color: #8b4451; border-color: #ead2d7; background: #fffafb; }
+body:not(.voter-page) .history-entry { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 11px 12px; border: 1px solid #e4e8f0; border-left: 3px solid #5d3fd3; border-radius: 9px; background: #fcfcff; }
+body:not(.voter-page) .history-vote { border-left-color: #0f9b8e; }
+body:not(.voter-page) .history-registration { border-left-color: #d29a37; }
+body:not(.voter-page) .history-entry-copy { min-width: 0; }
+body:not(.voter-page) .history-entry strong { color: #263650; font-size: .82rem; }
+body:not(.voter-page) .history-entry p { margin: 3px 0; overflow-wrap: anywhere; color: #536178; font-size: .76rem; }
+body:not(.voter-page) .history-entry small { color: #8791a2; font-size: .67rem; }
+body:not(.voter-page) .history-entry a { flex: 0 0 auto; color: #5138b8; font-size: .72rem; font-weight: 700; text-decoration: none; }
+body:not(.voter-page) .history-entry a:hover { text-decoration: underline; }
 body:not(.voter-page) .result-item { padding: 12px 0; color: #31405a; font-weight: 600; }
 body:not(.voter-page) #candidateList:empty::before, body:not(.voter-page) #results:empty::before { content: "Connect your wallet to load election data."; display: block; padding: 18px; color: var(--muted); border: 1px dashed var(--line); border-radius: 9px; text-align: center; }
 body:not(.voter-page) #message { min-height: 24px; margin: 6px 42px 20px; color: #087d73; font-weight: 700; text-align: center; }
@@ -222,6 +237,8 @@ body:not(.voter-page) #message { min-height: 24px; margin: 6px 42px 20px; color:
   body:not(.voter-page) .container { width: 100%; margin: 0; border: 0; border-radius: 0; }
   body:not(.voter-page) .hero { padding: 22px 18px 24px; }
   body:not(.voter-page) .dashboard { grid-template-columns: 1fr; grid-template-areas: "candidates" "admin" "results"; gap: 12px; padding: 16px 18px 12px; }
+  body:not(.voter-page) .transaction-history-panel { grid-column: auto; }
+  body:not(.voter-page) .history-entry { align-items: flex-start; flex-direction: column; gap: 8px; }
   body:not(.voter-page) .connection-card { align-items: stretch; flex-direction: column; }
   body:not(.voter-page) .connection-card button { width: 100%; }
   body:not(.voter-page) .form-grid { align-items: stretch; flex-direction: column; }

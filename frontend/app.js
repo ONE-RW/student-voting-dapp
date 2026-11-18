@@ -12,6 +12,9 @@ const results = document.getElementById("results");
 const adminPanel = document.getElementById("adminPanel");
 const candidateForm = document.getElementById("candidateForm");
 const registerForm = document.getElementById("registerForm");
+const transactionHistoryPanel = document.getElementById("transactionHistoryPanel");
+const transactionHistory = document.getElementById("transactionHistory");
+const refreshHistoryButton = document.getElementById("refreshHistoryButton");
 
 let provider;
 let signer;
@@ -81,6 +84,7 @@ async function connectWallet() {
     isAdmin = administrator.toLowerCase() === account.toLowerCase();
     walletStatus.textContent += isAdmin ? " (administrator)" : "";
     adminPanel.hidden = !isAdmin;
+    transactionHistoryPanel.hidden = !isAdmin;
     connectWalletButton.textContent = "Wallet Connected";
     await refresh();
     showMessage("Wallet and voting contract connected.");
@@ -100,13 +104,15 @@ async function refresh() {
     candidateList.replaceChildren();
     results.replaceChildren();
 
+    const votersByCandidate = await loadCandidateVoters(ids);
+    const namesById = new Map(ids.map((id, index) => [id.toString(), names[index]]));
+    if (isAdmin) await renderTransactionHistory(namesById);
     if (ids.length === 0) {
       candidateList.textContent = "No candidates have been added yet.";
       results.textContent = "No results yet.";
       return;
     }
 
-    const votersByCandidate = await loadCandidateVoters(ids);
     ids.forEach((id, index) => {
       const card = document.createElement("article");
       card.className = "candidate";
@@ -149,6 +155,80 @@ async function refresh() {
     });
   } catch (error) {
     showMessage(`Could not read voting data: ${errorText(error)}`, true);
+  }
+}
+
+async function renderTransactionHistory(candidateNames = new Map()) {
+  if (!contract || !isAdmin) return;
+  transactionHistory.replaceChildren();
+  const loading = document.createElement("p");
+  loading.className = "history-empty";
+  loading.textContent = "Loading on-chain activity...";
+  transactionHistory.append(loading);
+
+  try {
+    const [voteEvents, registrationEvents, candidateEvents] = await Promise.all([
+      contract.queryFilter(contract.filters.VoteCast(), 0, "latest"),
+      contract.queryFilter(contract.filters.VoterRegistered(), 0, "latest"),
+      contract.queryFilter(contract.filters.CandidateAdded(), 0, "latest"),
+    ]);
+    const entries = [
+      ...voteEvents.map((event) => ({ event, kind: "vote" })),
+      ...registrationEvents.map((event) => ({ event, kind: "registration" })),
+      ...candidateEvents.map((event) => ({ event, kind: "candidate" })),
+    ].sort((a, b) => b.event.blockNumber - a.event.blockNumber || b.event.index - a.event.index).slice(0, 20);
+
+    transactionHistory.replaceChildren();
+    if (!entries.length) {
+      const empty = document.createElement("p");
+      empty.className = "history-empty";
+      empty.textContent = "No transactions have been recorded yet.";
+      transactionHistory.append(empty);
+      return;
+    }
+
+    for (const { event, kind } of entries) {
+      let title;
+      let detail;
+      if (kind === "vote") {
+        const [voterAddress, candidateId] = event.args;
+        title = "Vote cast";
+        detail = `${voterAddress} voted for ${candidateNames.get(candidateId.toString()) || `Candidate #${candidateId}`}`;
+      } else if (kind === "registration") {
+        title = "Voter registered";
+        detail = `${event.args.voter} was registered to vote`;
+      } else {
+        title = "Candidate added";
+        detail = `${event.args.candidateName} joined the ballot`;
+      }
+
+      const row = document.createElement("article");
+      row.className = `history-entry history-${kind}`;
+      const copy = document.createElement("div");
+      copy.className = "history-entry-copy";
+      const heading = document.createElement("strong");
+      heading.textContent = title;
+      const description = document.createElement("p");
+      description.textContent = detail;
+      const meta = document.createElement("small");
+      meta.textContent = `Block ${event.blockNumber}`;
+      copy.append(heading, description, meta);
+      const link = document.createElement("a");
+      link.href = `https://sepolia.etherscan.io/tx/${event.transactionHash}`;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = "View transaction ↗";
+      link.setAttribute("aria-label", `View ${title.toLowerCase()} transaction on Sepolia Etherscan`);
+      row.append(copy, link);
+      transactionHistory.append(row);
+    }
+  } catch (error) {
+    console.warn("Could not load transaction history:", error);
+    transactionHistory.replaceChildren();
+    const unavailable = document.createElement("p");
+    unavailable.className = "history-empty history-error";
+    unavailable.textContent = "Transaction history could not be loaded from the Sepolia RPC provider. Try refreshing later.";
+    transactionHistory.append(unavailable);
   }
 }
 
@@ -201,6 +281,7 @@ registerForm.addEventListener("submit", async (event) => {
 });
 
 connectWalletButton.addEventListener("click", connectWallet);
+refreshHistoryButton.addEventListener("click", () => renderTransactionHistory());
 
 if (window.ethereum) {
   window.ethereum.on("accountsChanged", () => window.location.reload());
