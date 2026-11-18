@@ -1,0 +1,17 @@
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/vote.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/style.css
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/app.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/vote.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/Voting.json
+  Cache-Control: no-cache, no-store, must-revalidate

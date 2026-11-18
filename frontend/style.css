@@ -160,11 +160,11 @@ body:not(.voter-page) .contract-field { display: block; margin-top: 18px; color:
 body:not(.voter-page) .contract-field span { display: block; margin-bottom: 6px; }
 body:not(.voter-page) input { width: 100%; padding: 11px 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); font: inherit; }
 body:not(.voter-page) .contract-field input { max-width: 460px; color: #ecfffc; border-color: rgba(255,255,255,.24); background: rgba(10,20,50,.22); }
-body:not(.voter-page) .dashboard { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(300px, .9fr); grid-template-areas: "candidates admin" "results admin"; align-items: start; gap: 14px; padding: 22px 42px 14px; }
+body:not(.voter-page) .dashboard { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(300px, .9fr); grid-template-areas: "candidates admin" "results history"; align-items: start; gap: 14px; padding: 22px 42px 14px; }
 body:not(.voter-page) .candidates-panel { grid-area: candidates; }
 body:not(.voter-page) .admin-panel { grid-area: admin; align-self: start; }
 body:not(.voter-page) .results-section { grid-area: results; }
-body:not(.voter-page) .transaction-history-panel { grid-column: 1 / -1; }
+body:not(.voter-page) .transaction-history-panel { grid-area: history; }
 body:not(.voter-page) .panel { padding: 20px; border: 1px solid #dce3ed; border-radius: 13px; background: #fff; }
 body:not(.voter-page) .section-heading { align-items: flex-start; margin-bottom: 17px; }
 body:not(.voter-page) .section-heading h2 { margin: 0; font-size: 1.25rem; }
@@ -209,7 +209,7 @@ body:not(.voter-page) #message { min-height: 24px; margin: 6px 42px 20px; color:
   .voter-page .steps { grid-template-columns: 1fr; }
   .voter-page .results-section { grid-column: auto; }
   .voter-page .side-column { grid-row: auto; }
-  body:not(.voter-page) .dashboard { grid-template-columns: minmax(0, 1.15fr) minmax(260px, .85fr); grid-template-areas: "candidates admin" "results results"; padding-right: 28px; padding-left: 28px; }
+  body:not(.voter-page) .dashboard { grid-template-columns: minmax(0, 1.15fr) minmax(260px, .85fr); grid-template-areas: "candidates admin" "results results" "history history"; padding-right: 28px; padding-left: 28px; }
 }
 @media (max-width: 520px) {
   .voter-page .container { width: 100%; margin: 0; padding: 14px 12px 10px; }
@@ -236,8 +236,7 @@ body:not(.voter-page) #message { min-height: 24px; margin: 6px 42px 20px; color:
   .hero-ribbon { margin-right: -16px; margin-left: -16px; padding-right: 16px; padding-left: 16px; font-size: .55rem; }
   body:not(.voter-page) .container { width: 100%; margin: 0; border: 0; border-radius: 0; }
   body:not(.voter-page) .hero { padding: 22px 18px 24px; }
-  body:not(.voter-page) .dashboard { grid-template-columns: 1fr; grid-template-areas: "candidates" "admin" "results"; gap: 12px; padding: 16px 18px 12px; }
-  body:not(.voter-page) .transaction-history-panel { grid-column: auto; }
+  body:not(.voter-page) .dashboard { grid-template-columns: 1fr; grid-template-areas: "candidates" "admin" "results" "history"; gap: 12px; padding: 16px 18px 12px; }
   body:not(.voter-page) .history-entry { align-items: flex-start; flex-direction: column; gap: 8px; }
   body:not(.voter-page) .connection-card { align-items: stretch; flex-direction: column; }
   body:not(.voter-page) .connection-card button { width: 100%; }
