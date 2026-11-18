@@ -177,13 +177,16 @@ async function refresh() {
       detail.textContent = `Candidate #${id} | ${count} vote(s)`;
       text.append(title, detail);
       info.append(avatar, text);
-      const voteButton = document.createElement("button");
-      voteButton.type = "button";
-      voteButton.className = "vote-button";
-      voteButton.textContent = isAdministrator ? "Admin cannot vote" : voter[1] ? "Voted" : voter[0] ? "Vote" : "Not registered";
-      voteButton.disabled = isAdministrator || !voter[0] || voter[1];
-      voteButton.addEventListener("click", () => submitVote(id, names[index]));
-      card.append(info, voteButton);
+      card.append(info);
+      if (!isAdministrator) {
+        const voteButton = document.createElement("button");
+        voteButton.type = "button";
+        voteButton.className = "vote-button";
+        voteButton.textContent = voter[1] ? "Voted" : voter[0] ? "Vote" : "Not registered";
+        voteButton.disabled = !voter[0] || voter[1];
+        voteButton.addEventListener("click", () => submitVote(id, names[index]));
+        card.append(voteButton);
+      }
       candidateList.append(card);
 
       const result = document.createElement("div");

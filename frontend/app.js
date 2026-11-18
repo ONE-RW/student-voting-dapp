@@ -103,19 +103,17 @@ async function connectWallet() {
 async function refresh() {
   if (!contract) return;
   try {
-    const [[ids, names, voteCounts], voter] = await Promise.all([
-      contract.getCandidates(),
-      contract.voters(account),
-    ]);
+    const [ids, names, voteCounts] = await contract.getCandidates();
     candidateList.replaceChildren();
     results.replaceChildren();
 
-    const votersByCandidate = isAdmin ? await loadCandidateVoters(ids) : new Map();
     const namesById = new Map(ids.map((id, index) => [id.toString(), names[index]]));
-    if (isAdmin) await renderTransactionHistory(namesById);
     if (ids.length === 0) {
       candidateList.textContent = "No candidates have been added yet.";
       results.textContent = "No results yet.";
+      if (isAdmin) {
+        void renderTransactionHistory(namesById);
+      }
       return;
     }
 
@@ -128,29 +126,10 @@ async function refresh() {
       details.textContent = `Candidate ID: ${id}`;
       const voterList = document.createElement("div");
       voterList.className = "candidate-voter-list";
-      const candidateVoters = votersByCandidate.get(id.toString()) || [];
-      const voterHeading = document.createElement("strong");
-      voterHeading.textContent = `Voters (${candidateVoters.length})`;
-      voterList.append(voterHeading);
-      if (votersByCandidate.scanError) {
-        const unavailable = document.createElement("p");
-        unavailable.textContent = "Voter history is unavailable from the RPC provider.";
-        voterList.append(unavailable);
-      } else if (candidateVoters.length) {
-        const list = document.createElement("ul");
-        candidateVoters.forEach((address) => {
-          const item = document.createElement("li");
-          const addressText = document.createElement("code");
-          addressText.textContent = address;
-          item.append(addressText);
-          list.append(item);
-        });
-        voterList.append(list);
-      } else {
-        const empty = document.createElement("p");
-        empty.textContent = "No votes yet.";
-        voterList.append(empty);
-      }
+      voterList.dataset.candidateId = id.toString();
+      const loading = document.createElement("p");
+      loading.textContent = "Loading voter list...";
+      voterList.append(loading);
       card.append(title, details);
       if (isAdmin) card.append(voterList);
       candidateList.appendChild(card);
@@ -160,8 +139,44 @@ async function refresh() {
       result.textContent = `${names[index]}: ${voteCounts[index]} vote(s)`;
       results.appendChild(result);
     });
+
+    if (isAdmin) {
+      void loadCandidateVoters(ids).then((votersByCandidate) => {
+        candidateList.querySelectorAll(".candidate-voter-list").forEach((list) => {
+          renderCandidateVoters(list, votersByCandidate.get(list.dataset.candidateId) || [], votersByCandidate.scanError);
+        });
+      });
+      void renderTransactionHistory(namesById);
+    }
   } catch (error) {
     showMessage(`Could not read voting data: ${errorText(error)}`, true);
+  }
+}
+
+function renderCandidateVoters(container, addresses, scanError = false) {
+  container.replaceChildren();
+  const heading = document.createElement("strong");
+  heading.textContent = `Voters (${addresses.length})`;
+  container.append(heading);
+
+  if (scanError) {
+    const unavailable = document.createElement("p");
+    unavailable.textContent = "Voter history could not be loaded. Use transaction history below.";
+    container.append(unavailable);
+  } else if (addresses.length) {
+    const list = document.createElement("ul");
+    addresses.forEach((address) => {
+      const item = document.createElement("li");
+      const addressText = document.createElement("code");
+      addressText.textContent = address;
+      item.append(addressText);
+      list.append(item);
+    });
+    container.append(list);
+  } else {
+    const empty = document.createElement("p");
+    empty.textContent = "No votes yet.";
+    container.append(empty);
   }
 }
 
