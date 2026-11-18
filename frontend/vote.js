@@ -23,6 +23,8 @@ const activityTitle = document.getElementById("activityTitle");
 const activityDetail = document.getElementById("activityDetail");
 const activityIcon = document.getElementById("activityIcon");
 const activitySpinner = document.getElementById("activitySpinner");
+const voterHistory = document.getElementById("voterHistory");
+const refreshVoterHistoryButton = document.getElementById("refreshVoterHistoryButton");
 
 let provider;
 let contract;
@@ -108,6 +110,7 @@ async function connectWallet() {
       }
     };
     await refresh();
+    await loadVoterHistory();
     showActivity("Wallet connected", "Your wallet and Sepolia network are ready.", "success");
     showMessage("Wallet and voting contract connected.");
   } catch (error) {
@@ -216,6 +219,7 @@ async function submitVote(candidateId, candidateName) {
     await transaction.wait();
     transactionStatus.textContent = `Your vote for ${candidateName} was confirmed on Sepolia.`;
     await refresh();
+    await loadVoterHistory();
     showActivity("Vote confirmed", `Your vote for ${candidateName} has been recorded successfully.`, "success");
     showMessage(`Your vote for ${candidateName} has been recorded.`);
   } catch (error) {
@@ -226,8 +230,113 @@ async function submitVote(candidateId, candidateName) {
   }
 }
 
+async function loadVoterHistory() {
+  if (!contract || !account) {
+    voterHistory.innerHTML = '<p class="history-empty">Connect your wallet to view its confirmed votes.</p>';
+    return;
+  }
+
+  voterHistory.replaceChildren();
+  const loading = document.createElement("p");
+  loading.className = "history-empty";
+  loading.textContent = "Loading your confirmed vote history...";
+  voterHistory.append(loading);
+
+  try {
+    let events;
+    try {
+      events = await contract.queryFilter(contract.filters.VoteCast(account, null), 0, "latest");
+    } catch (rpcError) {
+      console.warn("RPC could not scan this wallet's vote history; trying Sepolia explorer index:", rpcError);
+      const indexedEvents = await loadIndexedVoterEvents();
+      events = indexedEvents.filter((event) => {
+        const voterAddress = event.args.voter ?? event.args[0];
+        return voterAddress.toLowerCase() === account.toLowerCase();
+      });
+    }
+    const orderedEvents = [...events].sort((a, b) => b.blockNumber - a.blockNumber || (b.index ?? 0) - (a.index ?? 0));
+    voterHistory.replaceChildren();
+    if (!orderedEvents.length) {
+      const empty = document.createElement("p");
+      empty.className = "history-empty";
+      empty.textContent = "No confirmed votes found for this wallet.";
+      voterHistory.append(empty);
+      return;
+    }
+
+    for (const event of orderedEvents) {
+      const candidateId = event.args.candidateId ?? event.args[1];
+      let candidateName = `Candidate #${candidateId}`;
+      try {
+        const candidate = await contract.getCandidate(candidateId);
+        candidateName = candidate.name ?? candidate[1];
+      } catch (_) {
+        // Keep the candidate ID visible if a candidate read is unavailable.
+      }
+
+      const row = document.createElement("article");
+      row.className = "voter-history-entry";
+      const details = document.createElement("div");
+      const title = document.createElement("strong");
+      title.textContent = `Voted for ${candidateName}`;
+      const meta = document.createElement("small");
+      meta.textContent = `Confirmed in block ${event.blockNumber}`;
+      details.append(title, meta);
+      const link = document.createElement("a");
+      link.href = `https://sepolia.etherscan.io/tx/${event.transactionHash}`;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = "View tx";
+      link.setAttribute("aria-label", `View vote for ${candidateName} on Sepolia Etherscan`);
+      row.append(details, link);
+      voterHistory.append(row);
+    }
+  } catch (error) {
+    console.error("Could not load voter history:", error);
+    voterHistory.replaceChildren();
+    const unavailable = document.createElement("p");
+    unavailable.className = "history-empty history-error";
+    unavailable.textContent = "Could not load vote history from the Sepolia provider. Refresh or open the transaction list on Sepolia Etherscan.";
+    voterHistory.append(unavailable);
+  }
+}
+
+async function loadIndexedVoterEvents() {
+  const baseUrl = `https://eth-sepolia.blockscout.com/api/v2/addresses/${CONTRACT_ADDRESS}/logs`;
+  const events = [];
+  let nextUrl = baseUrl;
+  while (nextUrl) {
+    const response = await fetch(nextUrl);
+    if (!response.ok) throw new Error(`Sepolia explorer returned HTTP ${response.status} while loading vote history.`);
+    const page = await response.json();
+    for (const log of page.items || []) {
+      try {
+        const parsed = contract.interface.parseLog({ topics: log.topics, data: log.data });
+        if (!parsed || parsed.name !== "VoteCast") continue;
+        const voterAddress = parsed.args.voter ?? parsed.args[0];
+        if (voterAddress.toLowerCase() !== account.toLowerCase()) continue;
+        events.push({
+          args: parsed.args,
+          blockNumber: Number(log.block_number),
+          index: Number(log.index),
+          transactionHash: log.transaction_hash,
+        });
+      } catch (_) {
+        // Ignore logs that do not match this contract ABI.
+      }
+    }
+    if (events.length) break;
+    const cursor = page.next_page_params;
+    nextUrl = cursor && Object.keys(cursor).length
+      ? `${baseUrl}?${new URLSearchParams(cursor).toString()}`
+      : null;
+  }
+  return events;
+}
+
 connectWalletButton.addEventListener("click", connectWallet);
 refreshButton.addEventListener("click", refresh);
+refreshVoterHistoryButton.addEventListener("click", loadVoterHistory);
 
 if (window.ethereum) {
   window.ethereum.on("accountsChanged", () => window.location.reload());

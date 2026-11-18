@@ -76,6 +76,15 @@ code { color: #214b3f; font-family: ui-monospace, SFMono-Regular, Consolas, mono
 .status-badge.success { border-color: #b8dfc5; color: var(--accent-dark); background: var(--accent-soft); }
 .status-hint { margin: 0 12px 11px; padding-top: 8px; border-top: 1px solid var(--line); color: var(--muted); font-size: .68rem; line-height: 1.45; }
 .transaction-message { margin: 10px 12px 12px; padding: 10px; border-radius: 8px; color: #577063; background: var(--mint); font-size: .68rem; line-height: 1.45; }
+.voter-history-list { display: grid; gap: 7px; padding: 9px 11px 11px; }
+.voter-history-entry { display: flex; align-items: center; justify-content: space-between; gap: 9px; padding: 9px; border: 1px solid var(--line); border-radius: 8px; background: #fbfdf9; }
+.voter-history-entry strong, .voter-history-entry small { display: block; }
+.voter-history-entry strong { font-size: .71rem; }
+.voter-history-entry small { margin-top: 3px; color: var(--muted); font-size: .62rem; }
+.voter-history-entry a { flex: 0 0 auto; color: var(--accent-dark); font-size: .66rem; font-weight: 700; text-decoration: none; }
+.voter-history-entry a:hover { text-decoration: underline; }
+.history-empty { margin: 0; padding: 10px; color: var(--muted); font-size: .68rem; line-height: 1.45; }
+.history-error { color: var(--danger); }
 .results-section { grid-column: 1; }
 .total-votes { color: var(--muted); font-size: .67rem; }
 .results-list { padding: 6px 12px 10px; }

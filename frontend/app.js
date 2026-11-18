@@ -87,7 +87,9 @@ async function connectWallet() {
     transactionHistoryPanel.hidden = !isAdmin;
     connectWalletButton.textContent = "Wallet Connected";
     await refresh();
-    showMessage("Wallet and voting contract connected.");
+    showMessage(isAdmin
+      ? "Administrator wallet and voting contract connected."
+      : "Connected wallet is not the contract administrator. Full election history is restricted to the deploying wallet.", !isAdmin);
   } catch (error) {
     console.error(error);
     showMessage(errorText(error), true);
@@ -104,7 +106,7 @@ async function refresh() {
     candidateList.replaceChildren();
     results.replaceChildren();
 
-    const votersByCandidate = await loadCandidateVoters(ids);
+    const votersByCandidate = isAdmin ? await loadCandidateVoters(ids) : new Map();
     const namesById = new Map(ids.map((id, index) => [id.toString(), names[index]]));
     if (isAdmin) await renderTransactionHistory(namesById);
     if (ids.length === 0) {
@@ -145,7 +147,8 @@ async function refresh() {
         empty.textContent = "No votes yet.";
         voterList.append(empty);
       }
-      card.append(title, details, voterList);
+      card.append(title, details);
+      if (isAdmin) card.append(voterList);
       candidateList.appendChild(card);
 
       const result = document.createElement("div");
@@ -167,16 +170,27 @@ async function renderTransactionHistory(candidateNames = new Map()) {
   transactionHistory.append(loading);
 
   try {
-    const [voteEvents, registrationEvents, candidateEvents] = await Promise.all([
-      contract.queryFilter(contract.filters.VoteCast(), 0, "latest"),
-      contract.queryFilter(contract.filters.VoterRegistered(), 0, "latest"),
-      contract.queryFilter(contract.filters.CandidateAdded(), 0, "latest"),
-    ]);
+    let voteEvents;
+    let registrationEvents;
+    let candidateEvents;
+    try {
+      [voteEvents, registrationEvents, candidateEvents] = await Promise.all([
+        contract.queryFilter(contract.filters.VoteCast(), 0, "latest"),
+        contract.queryFilter(contract.filters.VoterRegistered(), 0, "latest"),
+        contract.queryFilter(contract.filters.CandidateAdded(), 0, "latest"),
+      ]);
+    } catch (rpcError) {
+      console.warn("RPC could not scan full event history; trying Sepolia explorer index:", rpcError);
+      const indexedEvents = await loadIndexedContractEvents(["VoteCast", "VoterRegistered", "CandidateAdded"]);
+      voteEvents = indexedEvents.filter((event) => event.eventName === "VoteCast");
+      registrationEvents = indexedEvents.filter((event) => event.eventName === "VoterRegistered");
+      candidateEvents = indexedEvents.filter((event) => event.eventName === "CandidateAdded");
+    }
     const entries = [
       ...voteEvents.map((event) => ({ event, kind: "vote" })),
       ...registrationEvents.map((event) => ({ event, kind: "registration" })),
       ...candidateEvents.map((event) => ({ event, kind: "candidate" })),
-    ].sort((a, b) => b.event.blockNumber - a.event.blockNumber || b.event.index - a.event.index).slice(0, 20);
+    ].sort((a, b) => b.event.blockNumber - a.event.blockNumber || (b.event.index ?? 0) - (a.event.index ?? 0)).slice(0, 20);
 
     transactionHistory.replaceChildren();
     if (!entries.length) {
@@ -217,7 +231,7 @@ async function renderTransactionHistory(candidateNames = new Map()) {
       link.href = `https://sepolia.etherscan.io/tx/${event.transactionHash}`;
       link.target = "_blank";
       link.rel = "noopener noreferrer";
-      link.textContent = "View transaction ↗";
+      link.textContent = "View on Etherscan";
       link.setAttribute("aria-label", `View ${title.toLowerCase()} transaction on Sepolia Etherscan`);
       row.append(copy, link);
       transactionHistory.append(row);
@@ -235,7 +249,13 @@ async function renderTransactionHistory(candidateNames = new Map()) {
 async function loadCandidateVoters(candidateIds) {
   const voterMap = new Map(candidateIds.map((id) => [id.toString(), []]));
   try {
-    const events = await contract.queryFilter(contract.filters.VoteCast(), 0, "latest");
+    let events;
+    try {
+      events = await contract.queryFilter(contract.filters.VoteCast(), 0, "latest");
+    } catch (rpcError) {
+      console.warn("RPC could not scan vote events; trying Sepolia explorer index:", rpcError);
+      events = (await loadIndexedContractEvents(["VoteCast"])).filter((event) => event.eventName === "VoteCast");
+    }
     for (const event of events) {
       const [voterAddress, candidateId] = event.args;
       const list = voterMap.get(candidateId.toString());
@@ -246,6 +266,37 @@ async function loadCandidateVoters(candidateIds) {
     voterMap.scanError = true;
   }
   return voterMap;
+}
+
+async function loadIndexedContractEvents(eventNames) {
+  const baseUrl = `https://eth-sepolia.blockscout.com/api/v2/addresses/${contract.target}/logs`;
+  const events = [];
+  let nextUrl = baseUrl;
+  while (nextUrl) {
+    const response = await fetch(nextUrl);
+    if (!response.ok) throw new Error(`Sepolia explorer returned HTTP ${response.status} while loading event history.`);
+    const page = await response.json();
+    for (const log of page.items || []) {
+      try {
+        const parsed = contract.interface.parseLog({ topics: log.topics, data: log.data });
+        if (!parsed || !eventNames.includes(parsed.name)) continue;
+        events.push({
+          eventName: parsed.name,
+          args: parsed.args,
+          blockNumber: Number(log.block_number),
+          index: Number(log.index),
+          transactionHash: log.transaction_hash,
+        });
+      } catch (_) {
+        // Ignore logs that do not match this contract ABI.
+      }
+    }
+    const cursor = page.next_page_params;
+    nextUrl = cursor && Object.keys(cursor).length
+      ? `${baseUrl}?${new URLSearchParams(cursor).toString()}`
+      : null;
+  }
+  return events;
 }
 
 async function submitTransaction(send, successText) {
