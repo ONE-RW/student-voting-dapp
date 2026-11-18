@@ -90,6 +90,40 @@ code { color: #214b3f; font-family: ui-monospace, SFMono-Regular, Consolas, mono
 #message { min-height: 18px; margin: 9px 0 5px; color: var(--accent-dark); font-size: .73rem; font-weight: 600; text-align: center; }
 #message.error { color: var(--danger); }
 .app-footer { margin-top: 10px; padding-top: 11px; border-top: 1px solid var(--line); color: var(--muted); font-size: .66rem; text-align: center; }
+.voter-page { --accent: #08785e; --accent-dark: #084d3e; --accent-soft: #e0f0e8; --ink: #16382f; --muted: #6d8279; background: #eef3e9; }
+.voter-page .container { padding-top: 0; }
+.election-hero { position: relative; overflow: hidden; margin-bottom: 11px; padding: 22px 24px 0; border: 1px solid #174b3a; border-radius: 15px; color: #f4f8ed; background: linear-gradient(115deg, #103f32 0%, #145844 56%, #1d684d 100%); box-shadow: 0 12px 26px rgba(18,67,49,.14); }
+.election-hero::after { position: absolute; top: -112px; right: 145px; width: 310px; height: 310px; border: 1px solid rgba(215,239,197,.12); border-radius: 50%; content: ""; box-shadow: 0 0 0 24px rgba(215,239,197,.035), 0 0 0 50px rgba(215,239,197,.025); pointer-events: none; }
+.hero-topline, .hero-message, .hero-ribbon { position: relative; z-index: 1; }
+.hero-topline { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.election-hero .app-brand { gap: 11px; }
+.election-hero .brand-mark { border: 1px solid rgba(226,241,217,.36); border-radius: 11px; color: #eaf4df; background: rgba(235,246,226,.12); font-size: .78rem; letter-spacing: .04em; }
+.brand-kicker { margin: 0 0 2px; color: #a9cdb4; font-size: .61rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.election-hero .app-brand h1 { color: #fff; font-size: 1.2rem; letter-spacing: -.04em; }
+.election-hero .admin-link { color: #d0e7d2; }
+.hero-message { display: flex; min-height: 118px; align-items: center; justify-content: space-between; gap: 22px; padding: 17px 0 15px; }
+.hero-overline { margin: 0 0 6px; color: #b5d8af; font-size: .65rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.hero-message h2 { margin: 0; color: #f4f8ed; font-size: clamp(1.55rem, 3vw, 2.25rem); line-height: 1.05; letter-spacing: -.055em; }
+.hero-message p:last-child { max-width: 490px; margin: 8px 0 0; color: #c5d8ca; font-size: .78rem; line-height: 1.5; }
+.election-seal { display: flex; width: 78px; height: 78px; flex: 0 0 auto; align-items: center; justify-content: center; flex-direction: column; border: 1px solid rgba(227,239,213,.58); border-radius: 50%; color: #f2f6e6; background: rgba(230,241,220,.08); box-shadow: 0 0 0 5px rgba(230,241,220,.06), inset 0 0 0 4px rgba(230,241,220,.07); transform: rotate(8deg); }
+.election-seal span { font-size: .47rem; font-weight: 700; letter-spacing: .2em; }
+.election-seal strong { font-size: .88rem; letter-spacing: .07em; }
+.election-seal small { margin-top: 2px; font-size: .34rem; letter-spacing: .12em; }
+.hero-ribbon { display: flex; justify-content: space-between; gap: 12px; margin: 0 -24px; padding: 8px 24px; border-top: 1px solid rgba(236,246,227,.15); color: #d2e2d0; background: rgba(6,39,29,.22); font-size: .62rem; }
+.hero-ribbon span:first-child { display: inline-flex; align-items: center; gap: 7px; }
+.hero-ribbon .status-dot { background: #a8d78e; box-shadow: 0 0 0 3px rgba(168,215,142,.13); }
+.voter-page .info-card, .voter-page .panel { border-color: #d6e0d3; border-radius: 11px; box-shadow: 0 4px 12px rgba(34,69,47,.035); }
+.voter-page .panel-heading { background: linear-gradient(90deg, #fff 0%, #fbfcf8 100%); }
+.voter-page .candidate { transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease; }
+.voter-page .candidate:hover { transform: translateY(-1px); border-color: #9fc6ae; box-shadow: 0 5px 12px rgba(31,91,63,.08); }
+.voter-page .candidate-avatar { border: 1px solid #d2e5d8; background: linear-gradient(145deg, #eaf5eb, #dceee2); }
+.voter-page .vote-button { border-color: #a9cbb5; color: #0c6049; }
+.voter-page .results-section .panel-heading { background: #f8fbf5; }
+.voter-page .total-votes { padding: 5px 8px; border: 1px solid #d9e7d9; border-radius: 99px; color: #315d48; background: #edf5e9; font-weight: 700; }
+.voter-page .result-track { background: #e8eee1; }
+.voter-page .result-fill { background: linear-gradient(90deg, #168462, #80a74a); }
+.voter-page .transaction-message { border: 1px solid #e4eadb; background: #f3f6eb; }
+.voter-page .app-footer { color: #718276; }
 body:not(.voter-page) { color: #17253b; background: radial-gradient(circle at 8% 0%, #e4f7f6 0, transparent 31rem), linear-gradient(135deg, #f8faff 0%, #eef1fb 100%); }
 body:not(.voter-page) .container { width: min(1100px, calc(100% - 40px)); min-height: calc(100vh - 48px); margin: 24px auto; overflow: hidden; border: 1px solid rgba(220,227,237,.92); border-radius: 20px; background: rgba(255,255,255,.94); box-shadow: 0 20px 60px rgba(31,42,70,.12); }
 body:not(.voter-page) .hero { padding: 28px 42px 36px; color: #fff; background: linear-gradient(120deg, #202e62 0%, #4532a2 55%, #0f958b 130%); }
@@ -157,6 +191,15 @@ body:not(.voter-page) #message { min-height: 24px; margin: 6px 42px 20px; color:
   .voter-page .step { min-height: 46px; }
   .voter-page .panel-heading { padding-right: 10px; padding-left: 10px; }
   .voter-page .quiet-button { padding: 7px 8px; }
+  .election-hero { padding: 17px 16px 0; border-radius: 0 0 13px 13px; }
+  .election-hero::after { top: -75px; right: -105px; }
+  .hero-message { min-height: 108px; }
+  .hero-message h2 { max-width: 230px; font-size: 1.55rem; }
+  .hero-message p:last-child { max-width: 275px; font-size: .7rem; }
+  .election-seal { width: 61px; height: 61px; }
+  .election-seal strong { font-size: .72rem; }
+  .election-seal small { font-size: .29rem; }
+  .hero-ribbon { margin-right: -16px; margin-left: -16px; padding-right: 16px; padding-left: 16px; font-size: .55rem; }
   body:not(.voter-page) .container { width: 100%; margin: 0; border: 0; border-radius: 0; }
   body:not(.voter-page) .hero { padding: 22px 18px 24px; }
   body:not(.voter-page) .dashboard { grid-template-columns: 1fr; grid-template-areas: "candidates" "admin" "results"; gap: 12px; padding: 16px 18px 12px; }
